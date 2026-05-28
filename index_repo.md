@@ -31,6 +31,9 @@ Start scanning subfolders recursively. For each folder, follow these steps to de
    - **Config files** (`*.yml`, `*.toml`, `*.json`) — likely configuration or infrastructure
    - **Test files** (`test_*`, `*_test.*`, `*spec*`) — test layer
    - **Schema / model definitions** (`*.sql`, `schema.yml`, `*.proto`) — data layer
+   - **SQL Server project files** (`*.sqlproj`) — SSDT project entry point; read first if present
+   - **SQL Server deployment profiles** (`*.publish.xml`, `publish.xml`) — deployment configuration
+   - **SQL Server compiled artifacts** (`*.dacpac`, `*.bacpac`) — treat as binary, do not read
 3. If the purpose is still not clear from filenames and signals alone, open and skim 1–3 representative files — prefer the smallest non-test source file
 4. Once the role is clear, move on — do not read more files than necessary
 
@@ -59,6 +62,18 @@ When in doubt, prefer shallower scanning and note in the output that deeper fold
 - `.nuxt`
 - `coverage`
 - `*.egg-info`
+
+**SQL Server database project specific:**
+- `bin/` / `obj/` — SSDT/MSBuild output directories (compiled artifacts)
+- `.vs/` — Visual Studio local workspace settings
+- `DATA/` / `LOG/` — SQL Server runtime data and log file directories
+- `BACKUP/` / `Backup/` — database backup files (`.bak`, `.trn`)
+- `master/` / `model/` / `msdb/` / `tempdb/` — system database runtime folders (not source scripts)
+- `packages/` — NuGet package restore folder (common in SSDT solutions)
+
+**Scan signals specific to SQL Server database projects:**
+- `Pre-Deployment/` and `Post-Deployment/` folders under `Scripts/` — always index these; they contain ordered deployment scripts
+- `Tables/`, `Views/`, `StoredProcedures/`, `Functions/`, `Schemas/`, `Security/` — standard SSDT object-type folders; index at one level, no need to descend further unless the folder contains subfolders per schema
 
 **MySQL / database project specific:**
 - `data/` / `datadir/` — raw MySQL data directory (binary storage files)
@@ -98,6 +113,10 @@ If `project_index.md` already exists, update it in place and set the `date-updat
 | dbt | `models/marts/finance/` | Finance mart exposing revenue and billing metrics for BI consumption. |
 | MySQL source | `storage/innobase/buf/` | InnoDB buffer pool implementation (storage engine infrastructure). Manages in-memory page caching. Key file: `buf0buf.cc`. |
 | ETL pipeline | `pipelines/ingest/shopify/` | Ingestion layer pulling raw order and product data from the Shopify API. Key file: `shopify_connector.py`. |
+| SQL Server (SSDT) | `Tables/dbo/` | DDL definitions for all tables in the `dbo` schema. One `.sql` file per table. |
+| SQL Server (SSDT) | `StoredProcedures/` | Business logic implemented as T-SQL stored procedures, organised by schema. |
+| SQL Server (SSDT) | `Scripts/Pre-Deployment/` | Scripts executed before schema deployment, e.g. compatibility guards or drop statements. Key file: `Script.PreDeployment.sql`. |
+| SQL Server (SSDT) | `Scripts/Post-Deployment/` | Scripts executed after schema deployment, typically reference data population or permission grants. Key file: `Script.PostDeployment.sql`. |
 
 The actual output table should only have two columns — `Path` and `Contents` — without the `Project type` column.
 
