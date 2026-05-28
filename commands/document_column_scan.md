@@ -1,5 +1,5 @@
 ---
-description: "Scan subtask: find all references to a SQL Server 2016 column across the repo and write a structured findings file"
+description: "Scan subtask: find all references to a SQL Server 2016 column in the <TABLE> table and write a structured findings file"
 subtask: true
 ---
 
@@ -12,6 +12,10 @@ Produce a structured findings file that the writing subtask will reason over.
 
 Column to scan: **`$ARGUMENTS`**
 
+## Hardcoded context
+
+- **Table**: `<TABLE>` (do not derive this from project_index.md — it is fixed)
+
 ---
 
 ## Phase 0 — Read project context
@@ -19,7 +23,6 @@ Column to scan: **`$ARGUMENTS`**
 @project_index.md
 
 From this, note:
-- Table name (used as `<TABLE>` for the rest of this task)
 - Schema file locations and tooling (SSDT `.sqlproj`, Flyway, Liquibase, raw `.sql` with `GO` separators, ORM)
 - Languages and file extensions in the application layer
 - Documentation source: extended properties, dbt YAML, inline T-SQL comments, or none
@@ -31,7 +34,7 @@ From this, note:
 Find the canonical DDL for `$ARGUMENTS` in the schema files identified in Phase 0.
 
 Extract verbatim:
-- Full column declaration from `CREATE TABLE`
+- Full column declaration from `CREATE TABLE <TABLE>`
 - Data type — note `BIT` (boolean), `NVARCHAR` vs `VARCHAR` (unicode), `DECIMAL`/`NUMERIC` precision, `DATETIME2` vs `DATETIME`, `ROWVERSION`, `UNIQUEIDENTIFIER`
 - `NULL` / `NOT NULL`
 - `DEFAULT` constraint (may be named: `CONSTRAINT DF_... DEFAULT ...`)
@@ -134,7 +137,7 @@ For each view file found, check whether it selects or filters on `$ARGUMENTS`.
 
 !`grep -rn "\b$ARGUMENTS\b" --include="*.yml" --include="*.yaml" . 2>/dev/null | head -30`
 
-**Inline application code comments near writes** (from Phase 3 results — re-read with context lines):
+**Inline application code comments near writes:**
 
 !`grep -rn -A2 -B2 "\b$ARGUMENTS\b" --include="*.cs" --include="*.vb" --include="*.php" --include="*.py" --include="*.ts" --include="*.js" . 2>/dev/null | grep -E "(//|/\*|\*|#)" | head -30`
 
